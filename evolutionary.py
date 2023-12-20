@@ -2,7 +2,7 @@ from manim import *
 import os
 
 # Generate example genes with different bases
-def generateGene(labels):
+def generateGene(labels, col):
     gene = VGroup()
 
     for label in labels:
@@ -18,6 +18,10 @@ def generateGene(labels):
     for i, rect_and_label in enumerate(gene):
         rect_and_label.next_to(ORIGIN, UP, buff=i)
         rect_and_label.shift(2 * DOWN, 2 * LEFT)
+
+    # Decide color of gene
+    for rect in gene:
+        rect[0].set_fill(color=col, opacity=0.8)
 
     return gene
 
@@ -53,7 +57,7 @@ def heart():
     return heart
 
 
-class Evolution(Scene):
+class Evolution(MovingCameraScene):
     def construct(self):
         # Set the background color
         #self.camera.background_color = WHITE
@@ -195,17 +199,70 @@ class Evolution(Scene):
         self.terminology()
 
     def terminology(self):
+        # Mutation
+        mutation = Text("Mutation", color=PURE_RED)
+        mutation.shift(4 * RIGHT + 0.5 * UP)
+        self.play(FadeIn(mutation))
+        self.wait(1)
         # Show inital genes
-        gene1 = generateGene(["A", "C", "G", "T", "A"]).shift(LEFT)
-        gene2 = generateGene(["C", "G", "G", "T", "T"]).next_to(gene1).shift(2 * RIGHT)
+        gene1 = generateGene(["A", "C", "G", "T", "A"], BLUE_E).shift(LEFT)
+        gene2 = generateGene(["C", "G", "G", "T", "T"], MAROON_E).next_to(gene1).shift(2 * RIGHT)
         self.play(FadeIn(gene1, gene2))
         self.wait(3)
 
         # Mutation animation
-        mutatedGene = generateGene(["C", "A", "G", "T", "T"]).next_to(gene1).shift(2 * RIGHT)
-        mutatedGene[1][1].set_color(PURE_RED)
-        self.play(ReplacementTransform(gene2, mutatedGene, run_time=3))
+        mutatedGene1 = generateGene(["A", "C", "G", "T", "C"], BLUE_E).shift(LEFT)
+        mutatedGene2 = generateGene(["C", "A", "G", "T", "T"], MAROON_E).next_to(gene1).shift(2 * RIGHT)
+
+        mutatedGene2[1][1].set_color(PURE_RED)
+        mutatedGene1[4][1].set_color(PURE_RED)
+        self.play(ReplacementTransform(gene2, mutatedGene2, run_time=4))
         self.wait(2)
+        self.play(ReplacementTransform(gene1, mutatedGene1, run_time=4))
+
+        # Crossover
+        cross = Text("Crossover", color=PURE_RED)
+        cross.shift(4 * RIGHT + 0.5 * UP)
+
+        self.play(ReplacementTransform(mutation, cross, run_time=3))
+
+        # Corresponding parts of genes break off and swap places
+        gene1Part = VGroup(mutatedGene1[0], mutatedGene1[1])
+        gene2Part = VGroup(mutatedGene2[0], mutatedGene2[1])
+        self.play(
+            gene1Part.animate.move_to(gene2.get_center()).shift(1.5 * DOWN),
+            gene2Part.animate.move_to(gene1.get_center()).shift(1.5 * DOWN),
+            run_time=1
+        )
+
+        self.wait(2)
+
+        binaryGene1 = generateGene(["0", "1", "0", "1", "0"], BLUE_E).shift(LEFT)
+        binaryGene2 = generateGene(["1", "0", "1", "1", "1"], MAROON_E).next_to(binaryGene1)
+        binaryGene3 = generateGene(["1", "1", "0", "0", "0"], GREEN_E).next_to(binaryGene2)
+        binaryGene4 = generateGene(["0", "0", "1", "0", "1"], GOLD_A).next_to(binaryGene3)
+        pop = Text("Population").next_to(binaryGene2, DOWN).shift(RIGHT)
+
+        self.play(
+            FadeOut(cross),
+            ReplacementTransform(mutatedGene1, binaryGene1),
+            ReplacementTransform(mutatedGene2, binaryGene2),
+            FadeIn(pop, binaryGene3, binaryGene4),
+            run_time=2
+        )
+
+        self.wait(2)
+
+        # Move to next step
+        arrow = Arrow(DOWN, UP).next_to(binaryGene2, UP).shift(RIGHT)
+        selection = Text("Selection").next_to(arrow, UP)
+        self.play(
+            self.camera.frame.animate.move_to(arrow.get_start()),
+            FadeIn(arrow),
+            FadeIn(selection),
+            run_time=2
+        )
+
 
 
 if __name__ == "__main__":
