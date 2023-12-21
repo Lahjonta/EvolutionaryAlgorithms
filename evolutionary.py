@@ -64,7 +64,7 @@ class Evolution(MovingCameraScene):
 
         # Create front page
         text_1 = Text('Darwins Erbe:', color=WHITE)
-        text_2 = Text('Evolutionäre Algorithmen', color=WHITE)
+        text_2 = Text('Genetische Algorithmen', color=WHITE)
         text = VGroup(text_1, text_2).arrange(DOWN, aligned_edge=LEFT)
         text.move_to(ORIGIN)
         self.add(text)
@@ -241,7 +241,8 @@ class Evolution(MovingCameraScene):
         binaryGene2 = generateGene(["1", "0", "1", "1", "1"], MAROON_E).next_to(binaryGene1)
         binaryGene3 = generateGene(["1", "1", "0", "0", "0"], GREEN_E).next_to(binaryGene2)
         binaryGene4 = generateGene(["0", "0", "1", "0", "1"], GOLD_A).next_to(binaryGene3)
-        pop = Text("Population").next_to(binaryGene2, DOWN).shift(RIGHT)
+        pop = Text("Population").next_to(binaryGene4.get_center(), RIGHT)
+        pop.shift(RIGHT)
 
         self.play(
             FadeOut(cross),
@@ -253,16 +254,164 @@ class Evolution(MovingCameraScene):
 
         self.wait(2)
 
-        # Move to next step
-        arrow = Arrow(DOWN, UP).next_to(binaryGene2, UP).shift(RIGHT)
-        selection = Text("Selection").next_to(arrow, UP)
+        # Move to evaluation 1
+        evaluation = Text("Evaluation").next_to(binaryGene2, UR)
+        evaluation.shift(5 * UP + 5 * RIGHT)
+        arrow = Arrow(binaryGene4.get_top(), evaluation, buff=1)
         self.play(
-            self.camera.frame.animate.move_to(arrow.get_start()),
+            self.camera.frame.animate.move_to(evaluation),
             FadeIn(arrow),
-            FadeIn(selection),
-            run_time=2
+            FadeIn(evaluation),
+            run_time=4
         )
 
+        self.wait(3)
+
+        # Move to selection 1
+        selection = Text("Selektion").next_to(evaluation, RIGHT)
+        selection.shift(1 * DOWN + 3 * RIGHT)
+        binary1 = binaryGene1.copy().next_to(selection, UP)
+        binary1.shift(0.3 * DOWN + 0.3 * LEFT)
+        binary3 = binaryGene3.copy().next_to(binary1, RIGHT)
+        arrow2 = Arrow(evaluation.get_right(), evaluation.get_right() + 4 * RIGHT, buff=1)
+        selection.shift(0.5 * DOWN + 0.3 * RIGHT)
+
+        self.play(
+            self.camera.frame.animate.move_to(binary1[1].get_center()),
+            FadeIn(arrow2),
+            FadeIn(selection),
+            FadeIn(binary1, binary3),
+            run_time=4
+        )
+
+        self.wait(3)
+
+        # Move to mutation/crossover 1
+        binary1copy = binaryGene1.copy().next_to(binary3, 20 * RIGHT)
+        binary1copy.shift(0.5 * LEFT)
+        binary3copy = binaryGene3.copy().next_to(binary1copy, RIGHT)
+        mutCross = Text("Mutation/Crossover").next_to(binary1copy, DOWN)
+        arrow3 = Arrow(binary3[1].get_right(), binary1copy[1].get_left(), buff=1)
+        mutCross.shift(0.22 * DOWN + 0.3 * RIGHT)
+
+        self.play(
+            self.camera.frame.animate.move_to(binary1copy[1].get_center()),
+            FadeIn(arrow3),
+            FadeIn(mutCross),
+            FadeIn(binary1copy, binary3copy),
+            run_time=4
+        )
+
+        ## Mutation
+        binary1mut = generateGene(["0", "1", "1", "1", "0"], BLUE_E).next_to(binary3, 20 * RIGHT)
+        binary1mut.shift(0.5 * LEFT)
+        binary3mut = generateGene(["1", "1", "0", "0", "1"], GREEN_E).next_to(binary1mut, RIGHT)
+        binary1mut[2][1].set_color(PURE_RED)
+        binary3mut[4][1].set_color(PURE_RED)
+        self.play(
+            ReplacementTransform(binary1copy, binary1mut, run_time=2),
+            ReplacementTransform(binary3copy, binary3mut, run_time=2)
+        )
+
+        ## Crossover
+        binary1mutPart = VGroup(binary1mut[3], binary1mut[4])
+        binary3mutPart = VGroup(binary3mut[1], binary3mut[2])
+        self.play(
+            binary1mutPart.animate.move_to(binary3mut.get_center()).shift(0.5 * DOWN),
+            binary3mutPart.animate.move_to(binary1mut.get_center()).shift(1.5 * UP),
+            run_time=1
+        )
+
+        self.wait(3)
+
+        # Move to evaluation 2
+        evaluation2 = Text("Evaluation").next_to(binaryGene2, DR)
+        evaluation2.shift(5 * DOWN + 5 * RIGHT)
+        arrow3 = Arrow(binaryGene4.get_bottom(), evaluation2, buff=1)
+        self.play(
+            self.camera.frame.animate.move_to(evaluation2),
+            FadeIn(arrow3),
+            FadeIn(evaluation2),
+            run_time=4
+        )
+
+        self.wait(3)
+
+        # Move to selection 2
+        selection2 = Text("Selektion").next_to(evaluation2, RIGHT)
+        selection2.shift(2 * DOWN + 3 * RIGHT)
+        binary1x = binaryGene1.copy().next_to(selection2, UP)
+        binary1x.shift(0.5 * LEFT)
+        binary4 = binaryGene4.copy().next_to(binary1x, RIGHT)
+        arrow4 = Arrow(evaluation2.get_right(), evaluation2.get_right() + 4 * RIGHT, buff=1)
+        selection2.shift(0.2 * DOWN + 0.3 * RIGHT)
+
+        self.play(
+            self.camera.frame.animate.move_to(binary1x[1].get_center()),
+            FadeIn(arrow4),
+            FadeIn(selection2),
+            FadeIn(binary1x, binary4),
+            run_time=4
+        )
+
+        self.wait(3)
+
+        # Move to mutation/crossover 2
+        binary1copyx = binaryGene1.copy().next_to(binary4, 20 * RIGHT)
+        binary4copy = binaryGene4.copy().next_to(binary1copyx, RIGHT)
+        mutCross2 = Text("Mutation/Crossover").next_to(binary1copyx, DOWN)
+        arrow5 = Arrow(binary4[1].get_right(), binary1copyx[1].get_left(), buff=1)
+        mutCross2.shift(0.21 * DOWN + 0.3 * RIGHT)
+
+        self.play(
+            self.camera.frame.animate.move_to(binary1copyx[1].get_center()),
+            FadeIn(arrow5),
+            FadeIn(mutCross2),
+            FadeIn(binary1copyx, binary4copy),
+            run_time=4
+        )
+
+        ## Mutation
+        binary1mutx = generateGene(["0", "0", "0", "1", "0"], BLUE_E).next_to(binary4, 20 * RIGHT)
+        binary4mut = generateGene(["1", "0", "1", "0", "1"], GOLD_A).next_to(binary1mutx, RIGHT)
+        binary1mutx[1][1].set_color(PURE_RED)
+        binary4mut[0][1].set_color(PURE_RED)
+        self.play(
+            ReplacementTransform(binary1copyx, binary1mutx, run_time=2),
+            ReplacementTransform(binary4copy, binary4mut, run_time=2)
+        )
+
+        ## Crossover
+        binary1mutPartx = VGroup(binary1mutx[0], binary1mutx[1])
+        binary4mutPart = VGroup(binary4mut[0], binary4mut[1])
+        self.play(
+            binary1mutPartx.animate.move_to(binary4mut.get_center()).shift(1.5 * DOWN),
+            binary4mutPart.animate.move_to(binary1mutx.get_center()).shift(1.5 * DOWN),
+            run_time=1
+        )
+
+        self.wait(3)
+
+        # New population
+        newPop = Text("New Population").next_to(pop, 80 * RIGHT)
+        arrow6 = Arrow(mutCross.get_right(), newPop.get_left(), buff=2)
+        arrow7 = Arrow(binary4copy[4].get_right(), newPop.get_left(), buff=2)
+        arrow8 = Arrow(newPop.get_left(), pop.get_right(), buff=1)
+
+        self.play(
+            self.camera.frame.animate.move_to(pop.get_right() * 2.5).scale(-3)
+        )
+
+        self.wait(2)
+
+        self.play(
+            FadeIn(newPop, arrow6, arrow7, arrow8))
+
+        self.wait(3)
+
+        self.play(
+            *[FadeOut(mob) for mob in self.mobjects]
+        )
 
 
 if __name__ == "__main__":
