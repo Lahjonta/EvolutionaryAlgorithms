@@ -32,6 +32,22 @@ def mutate(individual):
     individual[mutation_mask] = np.random.randint(0, 255, mutation_mask.sum())
     return individual
 
+# Function to draw the population
+def draw_population(population):
+    screen.fill((0, 0, 0))  # Clear the screen
+
+    for i in range(GRID_SIZE):
+        for j in range(GRID_SIZE):
+            index = i * GRID_SIZE + j
+            if index < len(population):
+                color_tuple = tuple(population[index].astype(int))
+                rect = pygame.Rect(j * (RECTANGLE_SIZE + GRID_SPACING),
+                                   i * (RECTANGLE_SIZE + GRID_SPACING),
+                                   RECTANGLE_SIZE, RECTANGLE_SIZE)
+                pygame.draw.rect(screen, color_tuple, rect)
+
+    pygame.display.flip()
+
 # Main genetic algorithm loop
 population = generate_population(POPULATION_SIZE)
 fitness_history = []
@@ -73,9 +89,22 @@ for generation in range(GENERATIONS):
     pygame.display.flip()
     pygame.time.delay(50)  # Delay in milliseconds (adjust as needed)
 
-# Wait for the user to close the window
+# Pygame clock for controlling frame rate
+clock = pygame.time.Clock()
+
+# Main loop
+paused = False
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            paused = not paused
+
+    if not paused:
+        # Visualize the population in a grid
+        draw_population(population)
+
+        # Control the frame rate
+        clock.tick(2)  # Adjust the frame rate as needed
