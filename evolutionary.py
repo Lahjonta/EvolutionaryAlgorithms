@@ -420,4 +420,11 @@ if __name__ == "__main__":
 
 
 
+%%manim -qh GridConv
 
+class GridConv(Scene):
+    def construct(self, size=5):
+        squares = VGroup(*[Square(side_length=1) for _ in range(size**2)])
+        squares.arrange_in_grid(rows=size, cols=size, buff=0).shift(RIGHT)
+        self.add(squares)
+        self.wait(2)
