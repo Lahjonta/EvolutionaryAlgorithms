@@ -8,7 +8,7 @@ GENES = '''abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP
 QRSTUVWXYZ 1234567890, .-;:_!"#%&/()=?@${[]}'''
 
 # Target string to be generated
-TARGET = "Janika"
+TARGET = "Integrationsseminar"
 
 class Individual(object):
 	'''
