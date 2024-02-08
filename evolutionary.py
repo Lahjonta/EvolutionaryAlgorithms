@@ -2,6 +2,7 @@ from manim import *
 import os
 import numpy as np
 import random
+import cv2
 
 
 # Generate example genes with different bases
@@ -63,19 +64,16 @@ def heart():
 def get_random_color():
     return np.random.rand(3)
 
-
 # Calculate the fitness -> Fitness is the inverse of the mean absolute difference between the color and BACKGROUND_COLOR.
 def fitness(individual_color):
     # RGB values are normalized in manim therefore 1 not 255 #mean to average across all three channels
     return 1 - np.abs(individual_color - BACKGROUND_COLOR).mean()
-
 
 # Mutate a color by randomly altering its RGB values based on MUTATION_RATE.
 def mutate(individual_color):
     mutation_mask = np.random.rand(GENOME_LENGTH) < MUTATION_RATE
     individual_color[mutation_mask] = np.random.rand(mutation_mask.sum())
     return individual_color
-
 
 # Crossover between two colors where the values of 1 RGB component are switched
 def crossover(parent1, parent2):
@@ -84,14 +82,12 @@ def crossover(parent1, parent2):
     parent1[component], parent2[component] = parent2[component], parent1[component]
     return parent1, parent2
 
-
 # Functions to convert ManimColor Codes and RGB Color Codes
 def manim_color_to_array(manim_color):
     # Extract the RGB components from the Manim Color object
     rgb = manim_color.to_rgb()
     # Convert to a NumPy array
     return np.array(rgb)
-
 
 def array_to_manim_color(array):
     return ManimColor(tuple(array))
@@ -103,15 +99,15 @@ MUTATION_RATE = 0.05  # Probability of a gene mutating
 
 
 ########################################################################################################################
-# Manim Code
+# Manim Video Code
 class Evolution(MovingCameraScene):
     def construct(self):
-        # Set the background color
-        #self.camera.background_color = WHITE
+        # Set Font
+        Text.set_default(font="Monospace")
 
         # Create front page
         text_1 = Text('Darwins Erbe:', color=WHITE)
-        text_2 = Text('Genetische Algorithmen', color=WHITE)
+        text_2 = Text('Evolutionäre Algorithmen', color=WHITE)
         text = VGroup(text_1, text_2).arrange(DOWN, aligned_edge=LEFT)
         text.move_to(ORIGIN)
         self.add(text)
@@ -131,6 +127,23 @@ class Evolution(MovingCameraScene):
             *[FadeOut(mob) for mob in self.mobjects]
         )
 
+        # Workaround to play a video in manim
+        cap = cv2.VideoCapture(r"C:\Users\Janika\Documents\GitHub\EvolutionaryAlgorithms\EvoHuman.mp4")
+        flag = True
+        while flag:
+            flag, frame = cap.read()
+            if flag:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frame_img = ImageMobject(frame)
+                self.add(frame_img)
+                self.wait(0.08)
+                self.remove(frame_img)
+        cap.release()
+
+        self.play(
+            *[FadeOut(mob) for mob in self.mobjects]
+        )
+
         self.genes()
 
     def genes(self):
@@ -138,8 +151,8 @@ class Evolution(MovingCameraScene):
         title = Text("Biologie")
         title.center()
         self.play(GrowFromCenter(title))
-        self.wait(3)
-        self.play(Uncreate(title))
+        self.wait(2)
+        self.play(FadeOut(title))
         gene = generateGene(["A", "C", "G", "T", "A"], BLACK)
 
         # Add rectangles and labels to the scene
@@ -176,7 +189,6 @@ class Evolution(MovingCameraScene):
         self.play(cat[2].animate.set_opacity(0))
         self.wait(0.1)
         self.play(cat[2].animate.set_opacity(1))
-        self.wait(2)
 
         # Transition to new scene
         self.play(
@@ -189,9 +201,9 @@ class Evolution(MovingCameraScene):
         title = Text("Evolution?")
         title.move_to(ORIGIN)
         self.play(GrowFromEdge(title, DOWN))
-        self.wait(1)
+        self.wait(2)
         self.play(title.animate.shift(3 * UP))
-        self.wait(1)
+        self.wait(2)
 
         first = Text("1. Genetische Variation").scale(0.5).to_edge(LEFT).shift(2 * UP)
         second = Text("2. Beschränktes Überleben").scale(0.5).next_to(first, DOWN, buff=0.5, aligned_edge=LEFT)
@@ -204,7 +216,7 @@ class Evolution(MovingCameraScene):
         cat_grey = createCat(DARK_GREY, YELLOW_D, DL).next_to(cat_brown)
         cat_dark = createCat(DARKER_GREY, YELLOW_D, DL).next_to(cat_grey)
         self.play(FadeIn(cat_white, cat_brown, cat_grey, cat_dark))
-        self.wait(5)
+        self.wait(12)
 
         # Survival of the fittest
         self.play(FadeIn(second))
@@ -215,10 +227,14 @@ class Evolution(MovingCameraScene):
         # Move and disappear the white cat
         self.play(cat_white.animate.to_edge(RIGHT).shift(3 * UP))
         self.play(FadeOut(cat_white))
+        self.wait(3)
 
         # Move and disappear the brown cat
         self.play(cat_brown.animate.to_edge(RIGHT).shift(3 * UP))
         self.play(FadeOut(cat_brown))
+        self.wait(3)
+
+        self.wait(3)
 
         # Survivers reproduce
         self.play(FadeIn(third))
@@ -227,17 +243,18 @@ class Evolution(MovingCameraScene):
         cat_dark_3 = createCat(BLACK, YELLOW_E, DL).next_to(cat_dark)
         cat_dark_4 = createCat(DARKER_GRAY, YELLOW_C, DL).next_to(cat_dark_3)
 
-        h1 = heart().next_to(cat_grey, UR )
-        h1.shift(0.6*LEFT)
+        h1 = heart().next_to(cat_grey, UR)
+        h1.shift(0.6 * LEFT)
         self.play(FadeIn(h1))
         self.play(FadeIn(cat_dark_1, cat_dark_2))
         self.play(FadeOut(h1))
+        self.wait(2)
 
-        h2 = heart().next_to(cat_dark_1, UR).shift(0.6*LEFT)
+        h2 = heart().next_to(cat_dark_1, UR).shift(0.6 * LEFT)
         self.play(FadeIn(h2))
         self.play(FadeIn(cat_dark_3, cat_dark_4))
         self.play(FadeOut(h2))
-        self.wait(2)
+        self.wait(13)
 
         self.play(
             *[FadeOut(mob) for mob in self.mobjects]
@@ -246,11 +263,12 @@ class Evolution(MovingCameraScene):
         self.terminology()
 
     def terminology(self):
-        # Mutation
+        self.wait(1)
         mutation = Text("Mutation", color=PURE_RED)
         mutation.shift(4 * RIGHT + 0.5 * UP)
         self.play(FadeIn(mutation))
         self.wait(1)
+
         # Show inital genes
         gene1 = generateGene(["A", "C", "G", "T", "A"], BLUE_E).shift(LEFT)
         gene2 = generateGene(["C", "G", "G", "T", "T"], MAROON_E).next_to(gene1).shift(2 * RIGHT)
@@ -266,12 +284,14 @@ class Evolution(MovingCameraScene):
         self.play(ReplacementTransform(gene2, mutatedGene2, run_time=4))
         self.wait(2)
         self.play(ReplacementTransform(gene1, mutatedGene1, run_time=4))
+        self.wait(8)
 
         # Crossover
         cross = Text("Crossover", color=PURE_RED)
         cross.shift(4 * RIGHT + 0.5 * UP)
 
         self.play(ReplacementTransform(mutation, cross, run_time=3))
+        self.wait(5)
 
         # Corresponding parts of genes break off and swap places
         gene1Part = VGroup(mutatedGene1[0], mutatedGene1[1])
@@ -279,10 +299,10 @@ class Evolution(MovingCameraScene):
         self.play(
             gene1Part.animate.move_to(gene2.get_center()).shift(1.5 * DOWN),
             gene2Part.animate.move_to(gene1.get_center()).shift(1.5 * DOWN),
-            run_time=1
+            run_time=5
         )
 
-        self.wait(2)
+        self.wait(15)
 
         binaryGene1 = generateGene(["0", "1", "0", "1", "0"], BLUE_E).shift(LEFT)
         binaryGene2 = generateGene(["1", "0", "1", "1", "1"], MAROON_E).next_to(binaryGene1)
@@ -299,7 +319,7 @@ class Evolution(MovingCameraScene):
             run_time=2
         )
 
-        self.wait(2)
+        self.wait(25)
 
         # Move to evaluation 1
         evaluation = Text("Evaluation").next_to(binaryGene2, UR)
@@ -311,8 +331,6 @@ class Evolution(MovingCameraScene):
             FadeIn(evaluation),
             run_time=4
         )
-
-        self.wait(3)
 
         # Move to selection 1
         selection = Text("Selektion").next_to(evaluation, RIGHT)
@@ -330,8 +348,6 @@ class Evolution(MovingCameraScene):
             FadeIn(binary1, binary3),
             run_time=4
         )
-
-        self.wait(3)
 
         # Move to mutation/crossover 1
         binary1copy = binaryGene1.copy().next_to(binary3, 20 * RIGHT)
@@ -357,7 +373,8 @@ class Evolution(MovingCameraScene):
         binary3mut[4][1].set_color(PURE_RED)
         self.play(
             ReplacementTransform(binary1copy, binary1mut, run_time=2),
-            ReplacementTransform(binary3copy, binary3mut, run_time=2)
+            ReplacementTransform(binary3copy, binary3mut, run_time=2),
+            run_time=0.5
         )
 
         ## Crossover
@@ -366,11 +383,12 @@ class Evolution(MovingCameraScene):
         self.play(
             binary1mutPart.animate.move_to(binary3mut.get_center()).shift(0.5 * DOWN),
             binary3mutPart.animate.move_to(binary1mut.get_center()).shift(1.5 * UP),
-            run_time=1
+            run_time=0.5
         )
 
-        self.wait(3)
+        self.wait(2)
 
+        self.next_section(skip_animations=True)  # skip animations or the video will be too long
         # Move to evaluation 2
         evaluation2 = Text("Evaluation").next_to(binaryGene2, DR)
         evaluation2.shift(5 * DOWN + 5 * RIGHT)
@@ -439,6 +457,8 @@ class Evolution(MovingCameraScene):
 
         self.wait(3)
 
+        self.next_section()
+
         # New population
         newPop = Text("Neue Population").next_to(pop, 80 * RIGHT)
         arrow7 = Arrow(mutCross.get_right(), newPop.get_left(), buff=2)
@@ -454,12 +474,11 @@ class Evolution(MovingCameraScene):
         self.play(
             FadeIn(newPop, arrow7, arrow8, arrow9))
 
-        self.wait(5)
+        self.wait(15)
 
         self.play(
             *[FadeOut(mob) for mob in self.mobjects]
         )
-
         self.fitnessFunction()
 
     def fitnessFunction(self):
@@ -480,37 +499,40 @@ class Evolution(MovingCameraScene):
         cat_bad = createCat(WHITE, YELLOW_C, ORIGIN).next_to(cat_medium)
 
         self.play(FadeIn(cat_good, cat_medium, cat_bad))
-        self.wait(3)
+        self.wait(5)
 
         good = Text("Gut", font_size=24).next_to(cat_good, 2 * DOWN)
         medium = Text("Medium", font_size=24).next_to(cat_medium, 2 * DOWN)
         bad = Text("Schlecht", font_size=24).next_to(cat_bad, 2 * DOWN)
 
         self.play(FadeIn(good, medium, bad))
-        self.wait(3)
+        self.wait(6)
 
         self.play(FadeOut(good, medium, bad, cat_good, cat_medium, cat_bad))
 
         # Explain fitness  function and show change for color
-        fitness = Text("Fitness = 255 - |Hintergrundfarbe - Individuenfarbe|", font_size=28).next_to(fitness_function, 5 * DOWN)
+        fitness = Text("Fitness = 255 - |Hintergrundfarbe - Individuenfarbe|", font_size=28).next_to(fitness_function,
+                                                                                                     5 * DOWN)
         self.play(FadeIn(fitness))
 
-        self.wait(3)
+        self.wait(15)
 
         black_cat = createCat(BLACK, YELLOW_E, ORIGIN).shift(DOWN)
-        fit_score = Text("Fitness = 255 - |0 - 0|", font_size=24).next_to(black_cat,  2 * DOWN)  # for every one of the RGB channels
+        fit_score = Text("Fitness = 255 - |0 - 0|", font_size=24).next_to(black_cat,
+                                                                          2 * DOWN)  # for every one of the RGB channels
 
         self.play(FadeIn(black_cat, fit_score))
-        self.wait(2)
+        self.wait(5)
 
-        fit_score_2 = Text(f"Fitness = {255 - abs(0 - 0)}", font_size=24).next_to(black_cat, 2 * DOWN)  # backgroundcolor = individual color -> very good
+        fit_score_2 = Text(f"Fitness = {255 - abs(0 - 0)}", font_size=24).next_to(black_cat,
+                                                                                  2 * DOWN)  # backgroundcolor = individual color -> very good
 
         self.play(Transform(fit_score, fit_score_2), run_time=3)
 
         self.wait(5)
 
         # Loop to gradually lighten the cat and update fitness score
-        for i in range(0, 256, 1):
+        for i in range(0, 256, 10):
             new_color = interpolate_color(BLACK, WHITE, i / 255)
             new_cat = createCat(new_color, YELLOW_E, ORIGIN).shift(DOWN)
             # Calculate and create a new fitness score text
@@ -519,7 +541,7 @@ class Evolution(MovingCameraScene):
             self.play(Transform(black_cat, new_cat), Transform(fit_score, new_fit_score), run_time=0.1)
             self.wait(0.1)
 
-        self.wait(3)
+        self.wait(5)
 
         self.play(
             *[FadeOut(mob) for mob in self.mobjects]
@@ -529,7 +551,7 @@ class Evolution(MovingCameraScene):
 
     def camouflageSim(self):
         size = 12
-        example1 = Text("Zeit für eine Simulation!")
+        example1 = Text("Zeit für die Simulation!")
         example1.move_to(ORIGIN)
         self.play(FadeIn(example1))
         self.wait(2)
@@ -545,7 +567,7 @@ class Evolution(MovingCameraScene):
         squares = VGroup(*[Square(side_length=0.5, fill_opacity=1, fill_color=color, color=BLACK) for color in colors])
         squares.arrange_in_grid(rows=size, cols=size, buff=0).shift(2 * RIGHT)
         self.add(squares)
-        self.wait(5)
+        self.wait(10)
 
         for gen in range(GENERATIONS):
             # Update the counter
@@ -574,7 +596,7 @@ class Evolution(MovingCameraScene):
                 square.set_fill(color=BLACK)
 
             if gen < 2:
-                self.wait(5)  # Wait for a second
+                self.wait(20)  # Wait for a second
 
             # Mutate the top colors and apply these mutations to the bottom half
             for i, top_square in enumerate(top_half):
@@ -584,9 +606,8 @@ class Evolution(MovingCameraScene):
                 mutated_manim_color = array_to_manim_color(mutated_color_array)
                 bottom_half[i].set_fill(mutated_manim_color)
             if gen < 2:
-                self.wait(5)
-        self.wait(5)
-
+                self.wait(15)
+        self.wait(10)
 
 if __name__ == "__main__":
-    os.system("manim -pql evolutionary.py Evolution")
+    os.system("manim -pqh evolutionary.py Evolution")
