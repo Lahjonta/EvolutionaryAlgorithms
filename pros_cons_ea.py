@@ -143,7 +143,7 @@ class Pros_Cons(MovingCameraScene):
         self.wait(15)
         self.play(ReplacementTransform(cons4, cons4_title))
 
-        # Wait for 2 seconds
+        # Warte 2 Sekunden
         self.wait(2)
 
         # Auflösung der Texte
